@@ -1,0 +1,20 @@
+---
+- hosts: all
+  become: yes
+  user: vagrant
+  tasks:
+    - name: Setup sources
+      lineinfile: dest=/etc/apt/sources.list.d/ros-latest.list line="deb http://packages.ros.org/ros/ubuntu xenial main"
+    - name: Add key
+      apt_key: keyserver=hkp://ha.pool.sks-keyservers.net:80 id=0xB01FA116
+    - name: Install ROS
+      apt: name=ros-kinetic-desktop-full
+    - name: Initialise rosdep
+      command: "{{ item }} creates=/etc/ros/rosdep/sources.list.d/20-default.list"
+      with_items:
+        - rosdep init
+        - rosdep update
+    - name: Environment Setup
+      lineinfile: dest=/home/vagrant/.bashrc line="source /opt/ros/kinetic/setup.bash"
+    - name: Get ROSInstall
+      apt: name=python-rosinstall
