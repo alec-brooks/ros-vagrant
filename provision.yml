@@ -1,20 +1,58 @@
 ---
 - hosts: all
-  become: yes
   user: vagrant
   tasks:
     - name: Setup sources
-      lineinfile: dest=/etc/apt/sources.list.d/ros-latest.list line="deb http://packages.ros.org/ros/ubuntu xenial main"
+      lineinfile:
+        dest: /etc/apt/sources.list.d/ros-latest.list
+        line: "deb http://mirrors.ustc.edu.cn/ros/ubuntu/ xenial main"
+        create: yes
+      become: yes
     - name: Add key
       apt_key: keyserver=hkp://ha.pool.sks-keyservers.net:80 id=0xB01FA116
+      become: yes
     - name: Install ROS
-      apt: name=ros-kinetic-desktop-full
+      apt: name=ros-kinetic-desktop-full update-cache=yes
+      become: yes
     - name: Initialise rosdep
-      command: "{{ item }} creates=/etc/ros/rosdep/sources.list.d/20-default.list"
-      with_items:
-        - rosdep init
-        - rosdep update
+      command: rosdep init creates=/etc/ros/rosdep/sources.list.d/20-default.list
+      become: yes
+    - name: update rosdep
+      command: rosdep update
     - name: Environment Setup
       lineinfile: dest=/home/vagrant/.bashrc line="source /opt/ros/kinetic/setup.bash"
     - name: Get ROSInstall
       apt: name=python-rosinstall
+      become: yes
+    - name: Create catkin dir
+      file: path=/home/vagrant/catkin_ws/src state=directory
+    - name: Init Catkin
+      shell: . /opt/ros/kinetic/setup.sh && catkin_init_workspace
+      args:
+        chdir: /home/vagrant/catkin_ws/src
+        creates: /home/vagrant/catkin_ws/src/CMakeLists.txt
+    - name: Build Catkin
+      shell: . /opt/ros/kinetic/setup.sh && catkin_make
+      args:
+        chdir: /home/vagrant/catkin_ws
+    - name: Install dev tools
+      apt:
+        pkg: "{{ item }}"
+        state: latest
+      with_items:
+        - vim
+        - tmux
+        - terminator
+      become: yes
+    - name: Set timezone with symlink
+      file: src=/usr/share/zoneinfo/Australia/Melbourne
+            path=/etc/localtime
+            state=link
+            force=yes
+      become: yes
+      notify:
+        - update timezone
+  handlers:
+    - name: update timezone
+      command: dpkg-reconfigure --frontend noninteractive tzdata
+      become: yes
