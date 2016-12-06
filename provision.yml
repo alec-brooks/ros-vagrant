@@ -52,7 +52,13 @@
       become: yes
       notify:
         - update timezone
+    - name: Ensure ros is sourced
+      lineinfile: dest=/home/vagrant/.bashrc line='source /opt/ros/kinetic/setup.bash'
+    - name: Ensure catkin is sourced
+      lineinfile: dest=/home/vagrant/.bashrc line='source /home/vagrant/catkin_ws/setup.bash'
+
   handlers:
     - name: update timezone
       command: dpkg-reconfigure --frontend noninteractive tzdata
       become: yes
+
