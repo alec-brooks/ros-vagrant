@@ -55,7 +55,7 @@
     - name: Ensure ros is sourced
       lineinfile: dest=/home/vagrant/.bashrc line='source /opt/ros/kinetic/setup.bash'
     - name: Ensure catkin is sourced
-      lineinfile: dest=/home/vagrant/.bashrc line='source /home/vagrant/catkin_ws/setup.bash'
+      lineinfile: dest=/home/vagrant/.bashrc line='source /home/vagrant/catkin_ws/devel/setup.bash'
 
   handlers:
     - name: update timezone
